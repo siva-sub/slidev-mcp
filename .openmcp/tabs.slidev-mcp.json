@@ -1,0 +1,426 @@
+{
+  "clientId": "f3459e97-9e97-559e97e2e83-859e97e2e833c4b-33c4b999",
+  "currentIndex": 1,
+  "tabs": [
+    {
+      "name": "Tools",
+      "icon": "icon-tool",
+      "type": "blank",
+      "componentIndex": 2,
+      "storage": {
+        "activeNames": [
+          0
+        ],
+        "formData": {
+          "content": "",
+          "layout": ""
+        },
+        "currentToolName": "add_page"
+      }
+    },
+    {
+      "name": "Interaction Test",
+      "icon": "icon-robot",
+      "type": "blank",
+      "componentIndex": 3,
+      "storage": {
+        "activeNames": [
+          0
+        ],
+        "messages": [
+          {
+            "role": "user",
+            "content": "帮我生成一份讲解 mcp 的简单 slidev，下面是你能参考的部分   扩充 mcp 服务器的原子技能\n在上面的例子中，虽然我们通过 system prompt 注入了我们的经验和知识，但是其实你会发现这些我们注入的行为，比如「查询所有节点类型」和「获取一个节点的所有字段」，是不是流程很固定？但是 system prompt 是通过自然语言编写的，它具有语言特有的模糊性，我们无法保证它一定是可以拓展的。那么除了 system prompt，还有什么方法可以注入我们的经验与知识呢？有的，兄弟，有的。\n\n在这种流程固定，而且这个操作也非常地容易让「稍微有点经验的人」也能想到的情况下，除了使用 system prompt 外，我们还有一个方法可以做到更加标准化地注入知识，也就是把上面的这些个流程写成额外的 mcp tool。这个方法被我称为「原子化扩充」(Atomization Supplement)。\n\n所谓原子化扩充，也就是增加额外的 mcp tool，这些 tool 在功能层面是「原子化」的。\n\n满足如下条件之一的 tool，被称为 原子 tool (Atomic Tool)： tool 无法由更加细粒度的功能通过有限组合得到 组成得到 tool 的更加细粒度的功能，大模型并不会完全使用，或者使用不可靠 (比如汇编语言，比如 DOM 查询)\n\n扩充额外的原子 tool，能够让大模型知道 “啊！我还有别的手段可以耍！” ，那么只要 description 比较恰当，大模型就能够使用它们来获得额外的信息，而不是产生「幻觉」让任务失败。\n\n对于上面的一整套流程，我们目前知道了如下两个技能大模型是会产生「幻觉」的：\n\n获取一个节点类别的标签（询问评论，大模型没说自己不知道什么是评论标签，而是直接使用了 Comment，但是实际的评论标签是 BlogComment）\n获取一个节点类别的字段（询问最新评论，大模型选择通过 createAt 排序，但是记录 BlogComment 创建时间的字段是 createTime）\n在之前，我们通过了 system prompt 来完成了信息的注入，现在，丢弃你的 system prompt 吧！我们来玩点更加有趣的游戏。在刚刚的 util.go 中，我们针对上面的两个幻觉，实现两个额外的函数 (经过测试，cursor或者trae能完美生成下面的代码，可以不用自己写)：\n\n\n// 获取所有的节点类型\nfunc GetAllNodeTypes() ([]string, error) {\n\tcypher := \"MATCH (n) RETURN DISTINCT labels(n) AS labels\"\n\tresult, err := ExecuteReadOnlyCypherQuery(cypher)\n\tif err!= nil {\n\t\treturn nil, err\n\t}\n\tvar nodeTypes []string\n\tfor _, record := range result {\n\t\tlabels := record[\"labels\"].([]any)\n\t\tfor _, label := range labels {\n\t\t\tnodeTypes = append(nodeTypes, label.(string))\n\t\t}\n\t}\n\treturn nodeTypes, nil\n}\n\n// 获取一个节点的字段示范\nfunc GetNodeFields(nodeType string) ([]string, error) {\n\tcypher := fmt.Sprintf(\"MATCH (n:%s) RETURN keys(n) AS keys LIMIT 1\", nodeType)\n\tresult, err := ExecuteReadOnlyCypherQuery(cypher)\n\tif err!= nil {\n\t\treturn nil, err\n\t}\n\tvar fields []string\n\tfor _, record := range result {\n\t\tkeys := record[\"keys\"].([]any)\n\t\tfor _, key := range keys {\n\t\t\tfields = append(fields, key.(string))\n\t\t}\n\t}\n\treturn fields, nil\n}\n在 main.go 中完成它们的 schema 的申明和 tool 的注册：\n\n\n// ... existing code ...\n\n\tgetAllNodeTypes := mcp.NewTool(\"getAllNodeTypes\",\n\t\tmcp.WithDescription(\"获取所有的节点类型\"),\n\t)\n\n\tgetNodeField := mcp.NewTool(\"getNodeField\",\n\t\tmcp.WithDescription(\"获取节点的字段\"),\n\t\tmcp.WithString(\"nodeLabel\",\n\t\t\tmcp.Required(),\n\t\t\tmcp.Description(\"节点的标签\"),\n\t\t),\n\t)\n\n\t// 注册对应的工具到 schema 上\n\ts.AddTool(getAllNodeTypes, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {\n\t\tresult, err := util.GetAllNodeTypes()\n\n\t\tfmt.Println(result)\n\t\t\n\t\tif err != nil {\n\t\t\treturn mcp.NewToolResultText(\"\"), err\n\t\t}\n\t\t\n\t\treturn mcp.NewToolResultText(fmt.Sprintf(\"%v\", result)), nil\n\t})\n\n\ts.AddTool(getNodeField, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {\n\t\targs, ok := request.Params.Arguments.(map[string]interface{})\n\t\tif !ok {\n\t\t\treturn mcp.NewToolResultText(\"\"), fmt.Errorf(\"invalid arguments type\")\n\t\t}\n\t\tnodeLabel, ok := args[\"nodeLabel\"].(string)\n\t\tif !ok {\n\t\t\treturn mcp.NewToolResultText(\"\"), fmt.Errorf(\"nodeLabel argument is not a string\")\n\t\t}\n\t\tresult, err := util.GetNodeFields(nodeLabel)\n\t\t\n\t\tfmt.Println(result)\n\t\t\n\t\tif err!= nil {\n\t\t\treturn mcp.NewToolResultText(\"\"), err\n\t\t}\n\t\t\n\t\treturn mcp.NewToolResultText(fmt.Sprintf(\"%v\", result)), nil\n\t})\n\n// ... existing code ...\n重新运行 sse 服务器，然后直接询问大模型，此时，我们取消使用 system prompt（创建一个空的，或者直接把当前的 prompt 删除），询问结果如下： ",
+            "extraInfo": {
+              "created": 1750679138814,
+              "state": "success",
+              "serverName": "deepseek",
+              "enableXmlWrapper": false
+            }
+          },
+          {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+              {
+                "id": "call_0_7f1a0ab5-e356-4ec7-b8f4-4e386a7c2b47",
+                "index": 0,
+                "type": "function",
+                "function": {
+                  "name": "check_environment",
+                  "arguments": "{}"
+                }
+              }
+            ],
+            "extraInfo": {
+              "created": 1750679143225,
+              "state": "success",
+              "serverName": "deepseek",
+              "enableXmlWrapper": false
+            }
+          },
+          {
+            "role": "tool",
+            "index": 0,
+            "tool_call_id": "call_0_7f1a0ab5-e356-4ec7-b8f4-4e386a7c2b47",
+            "content": [
+              {
+                "type": "text",
+                "text": "true"
+              },
+              {
+                "type": "text",
+                "text": "Environment is ready"
+              },
+              {
+                "type": "text",
+                "text": "51.8.2\n"
+              }
+            ],
+            "extraInfo": {
+              "created": 1750679144012,
+              "state": "success",
+              "serverName": "deepseek",
+              "usage": {
+                "prompt_tokens": 1970,
+                "completion_tokens": 15,
+                "total_tokens": 1985,
+                "prompt_tokens_details": {
+                  "cached_tokens": 0
+                },
+                "prompt_cache_hit_tokens": 0,
+                "prompt_cache_miss_tokens": 1970
+              },
+              "enableXmlWrapper": false
+            }
+          },
+          {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+              {
+                "id": "call_0_1b21e7cf-00d4-4c85-8856-72849a89dc1b",
+                "index": 0,
+                "type": "function",
+                "function": {
+                  "name": "create_slidev",
+                  "arguments": "{\"path\":\"mcp_explanation\"}"
+                }
+              }
+            ],
+            "extraInfo": {
+              "created": 1750679148234,
+              "state": "success",
+              "serverName": "deepseek",
+              "enableXmlWrapper": false
+            }
+          },
+          {
+            "role": "tool",
+            "index": 0,
+            "tool_call_id": "call_0_1b21e7cf-00d4-4c85-8856-72849a89dc1b",
+            "content": [
+              {
+                "type": "text",
+                "text": "false"
+              },
+              {
+                "type": "text",
+                "text": "Command failed: 无法识别的选项：mcp_explanation\n"
+              }
+            ],
+            "extraInfo": {
+              "created": 1750679149339,
+              "state": "success",
+              "serverName": "deepseek",
+              "usage": {
+                "prompt_tokens": 2026,
+                "completion_tokens": 24,
+                "total_tokens": 2050,
+                "prompt_tokens_details": {
+                  "cached_tokens": 1920
+                },
+                "prompt_cache_hit_tokens": 1920,
+                "prompt_cache_miss_tokens": 106
+              },
+              "enableXmlWrapper": false
+            }
+          },
+          {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+              {
+                "id": "call_0_a2888d46-e9ab-44a3-b18b-0ecbf6e09145",
+                "index": 0,
+                "type": "function",
+                "function": {
+                  "name": "create_slidev",
+                  "arguments": "{\"path\":\"./mcp_explanation\"}"
+                }
+              }
+            ],
+            "extraInfo": {
+              "created": 1750679155976,
+              "state": "success",
+              "serverName": "deepseek",
+              "enableXmlWrapper": false
+            }
+          },
+          {
+            "role": "tool",
+            "index": 0,
+            "tool_call_id": "call_0_a2888d46-e9ab-44a3-b18b-0ecbf6e09145",
+            "content": [
+              {
+                "type": "text",
+                "text": "false"
+              },
+              {
+                "type": "text",
+                "text": "Command failed: 无法识别的选项：./mcp_explanation\n"
+              }
+            ],
+            "extraInfo": {
+              "created": 1750679157078,
+              "state": "success",
+              "serverName": "deepseek",
+              "usage": {
+                "prompt_tokens": 2089,
+                "completion_tokens": 26,
+                "total_tokens": 2115,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2048
+                },
+                "prompt_cache_hit_tokens": 2048,
+                "prompt_cache_miss_tokens": 41
+              },
+              "enableXmlWrapper": false
+            }
+          },
+          {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+              {
+                "id": "call_0_6da8c96f-ab54-40cd-a033-7afe8b440928",
+                "index": 0,
+                "type": "function",
+                "function": {
+                  "name": "create_slidev",
+                  "arguments": "{\"path\":\"mcp-explanation\"}"
+                }
+              }
+            ],
+            "extraInfo": {
+              "created": 1750679161736,
+              "state": "success",
+              "serverName": "deepseek",
+              "enableXmlWrapper": false
+            }
+          },
+          {
+            "role": "tool",
+            "index": 0,
+            "tool_call_id": "call_0_6da8c96f-ab54-40cd-a033-7afe8b440928",
+            "content": [
+              {
+                "type": "text",
+                "text": "false"
+              },
+              {
+                "type": "text",
+                "text": "Command failed: 无法识别的选项：mcp-explanation\n"
+              }
+            ],
+            "extraInfo": {
+              "created": 1750679162833,
+              "state": "success",
+              "serverName": "deepseek",
+              "usage": {
+                "prompt_tokens": 2155,
+                "completion_tokens": 23,
+                "total_tokens": 2178,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2112
+                },
+                "prompt_cache_hit_tokens": 2112,
+                "prompt_cache_miss_tokens": 43
+              },
+              "enableXmlWrapper": false
+            }
+          }
+        ],
+        "settings": {
+          "modelIndex": 0,
+          "enableTools": [
+            {
+              "name": "check_environment",
+              "description": "检查Node.js和Slidev环境是否就绪",
+              "inputSchema": {
+                "type": "object",
+                "properties": {}
+              },
+              "enabled": true
+            },
+            {
+              "name": "install_slidev",
+              "description": "安装Slidev CLI工具",
+              "inputSchema": {
+                "type": "object",
+                "properties": {}
+              },
+              "enabled": true
+            },
+            {
+              "name": "create_slidev",
+              "description": "创建新的Slidev演示文稿",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              },
+              "enabled": true
+            },
+            {
+              "name": "load_slidev",
+              "description": "加载已存在的Slidev项目",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              },
+              "enabled": true
+            },
+            {
+              "name": "make_cover",
+              "description": "创建或更新封面页",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "subtitle": {
+                    "type": "string"
+                  },
+                  "author": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string"
+                  },
+                  "background": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              },
+              "enabled": true
+            },
+            {
+              "name": "add_page",
+              "description": "添加新幻灯片页面",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string"
+                  },
+                  "layout": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "content"
+                ]
+              },
+              "enabled": true
+            },
+            {
+              "name": "set_page",
+              "description": "设置指定页面的内容",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "layout": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "index",
+                  "content"
+                ]
+              },
+              "enabled": true
+            },
+            {
+              "name": "get_page",
+              "description": "获取指定页面的内容",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "index"
+                ]
+              },
+              "enabled": true
+            },
+            {
+              "name": "start_slidev",
+              "description": "启动Slidev演示文稿",
+              "inputSchema": {
+                "type": "object",
+                "properties": {}
+              },
+              "enabled": true
+            },
+            {
+              "name": "export_slidev",
+              "description": "导出Slidev为PDF或其他格式",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string"
+                  }
+                }
+              },
+              "enabled": true
+            }
+          ],
+          "enableWebSearch": false,
+          "temperature": 0.6,
+          "contextLength": 100,
+          "systemPrompt": "",
+          "enableXmlWrapper": false,
+          "parallelToolCalls": true
+        }
+      }
+    }
+  ]
+}

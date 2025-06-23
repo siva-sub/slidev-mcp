@@ -1,0 +1,34 @@
+{
+  "items": [
+    [
+      {
+        "connectionType": "STDIO",
+        "command": "mcp",
+        "args": [
+          "run",
+          "main.py"
+        ],
+        "url": "",
+        "cwd": "{workspace}",
+        "oauth": "",
+        "clientName": "openmcp.connect.STDIO",
+        "clientVersion": "0.0.1",
+        "env": {
+          "HOME": "/Users/bytedance",
+          "LOGNAME": "bytedance",
+          "PATH": "/opt/homebrew/opt/openjdk@11/bin:/Users/bytedance/Downloads/neo4j-community-4.4.44/bin:/Users/bytedance/.local/bin:/Users/bytedance/.nvm/versions/node/v22.14.0/bin:/Users/bytedance/miniconda3/bin:/Users/bytedance/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/usr/local/go/bin:/opt/puppetlabs/bin:/Users/bytedance/.cargo/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin/:/Applications/Trae CN.app/Contents/Resources/app/bin/lib",
+          "SHELL": "/bin/zsh",
+          "TERM": "xterm-256color",
+          "USER": "bytedance"
+        },
+        "serverInfo": {
+          "name": "slidev-mcp",
+          "version": "1.9.4"
+        },
+        "filePath": "{workspace}/main.py",
+        "name": "slidev-mcp",
+        "version": "1.9.4"
+      }
+    ]
+  ]
+}

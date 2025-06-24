@@ -4,6 +4,10 @@ import subprocess
 import sys
 import shutil
 from pathlib import Path
+import os
+from utils import parse_markdown_slides
+import asyncio
+from crawl4ai import AsyncWebCrawler
 
 mcp = FastMCP('slidev-mcp', version="0.0.1")
 
@@ -17,11 +21,9 @@ class SlidevResult(NamedTuple):
     output: Optional[Union[str, int, List[str]]] = None
 
 def check_nodejs_installed() -> bool:
-    """检查系统是否安装了Node.js"""
     return shutil.which("node") is not None
 
 def run_command(command: Union[str, List[str]]) -> SlidevResult:
-    """执行shell命令并返回结果"""
     try:
         result = subprocess.run(
             command,
@@ -37,8 +39,39 @@ def run_command(command: Union[str, List[str]]) -> SlidevResult:
     except Exception as e:
         return SlidevResult(False, f"Error executing command: {str(e)}")
 
+def parse_markdown_slides(content: str) -> list:
+    """
+    解析markdown内容，按YAML front matter切分幻灯片
+    """
+    slides = []
+    current_slide = []
+    in_yaml = False
+    
+    for line in content.splitlines():
+        if line.strip() == '---' and not in_yaml:
+            # 开始YAML front matter
+            if not current_slide:
+                in_yaml = True
+                current_slide.append(line)
+            else:
+                # 遇到新的幻灯片分隔符
+                slides.append('\n'.join(current_slide))
+                current_slide = [line]
+                in_yaml = True
+        elif line.strip() == '---' and in_yaml:
+            # 结束YAML front matter
+            current_slide.append(line)
+            in_yaml = False
+        else:
+            current_slide.append(line)
+    
+    # 添加最后一个幻灯片
+    if current_slide:
+        slides.append('\n'.join(current_slide))
+    
+    return slides
+
 def load_slidev_content(path: str) -> bool:
-    """加载Slidev项目的slides.md内容到内存"""
     global SLIDEV_CONTENT, ACTIVE_SLIDEV_PROJECT
     
     slides_path = Path(path) / "slides.md"
@@ -54,129 +87,168 @@ def load_slidev_content(path: str) -> bool:
         "slides_path": str(slides_path)
     }
     
-    # 按---分割幻灯片页面
-    SLIDEV_CONTENT = [slide.strip() for slide in content.split('---\n') if slide.strip()]
+    slides = parse_markdown_slides(content)
+    SLIDEV_CONTENT = [slide.strip() for slide in slides if slide.strip()]
     return True
 
 def save_slidev_content() -> bool:
-    """将内存中的幻灯片内容保存回文件"""
     global ACTIVE_SLIDEV_PROJECT, SLIDEV_CONTENT
     
     if not ACTIVE_SLIDEV_PROJECT:
         return False
     
     with open(ACTIVE_SLIDEV_PROJECT["slides_path"], 'w', encoding='utf-8') as f:
-        f.write('---\n'.join(SLIDEV_CONTENT))
+        f.write('\n\n'.join(SLIDEV_CONTENT))
     
     return True
 
 @mcp.tool(
+    name='websearch',
+    description='search the given https url and get the markdown text of the website'
+)
+async def websearch(url: str) -> SlidevResult:
+    async with AsyncWebCrawler() as crawler:
+        result = await crawler.arun(url)
+        return SlidevResult(True, "success", result.markdown)
+
+@mcp.tool(
     name='check_environment',
-    description='检查Node.js和Slidev环境是否就绪'
+    description='check if nodejs and slidev-cli is ready'
 )
 def check_environment() -> SlidevResult:
-    """检查运行环境"""
     if not check_nodejs_installed():
         return SlidevResult(False, "Node.js is not installed. Please install Node.js first.")
     
     result = run_command("slidev --version")
     if not result.success:
-        return SlidevResult(False, "Slidev is not installed. Please install it first.")
-    return SlidevResult(True, "Environment is ready", result.output)
+        return run_command("npm install -g @slidev/cli")
+    return SlidevResult(True, "环境就绪，slidev 可以使用", result.output)
 
-@mcp.tool(
-    name='install_slidev',
-    description='安装Slidev CLI工具'
-)
-def install_slidev() -> SlidevResult:
-    """安装Slidev"""
-    if not check_nodejs_installed():
-        return SlidevResult(False, "Node.js is not installed. Please install Node.js first.")
-    return run_command("npm install -g @slidev/cli")
 
 @mcp.tool(
     name='create_slidev',
-    description='创建新的Slidev演示文稿',
+    description='create slidev, you need to ask user to get title and author to continue the task, you don\'t know title and author at beginning',
 )
-def create_slidev(path: str) -> SlidevResult:
-    """创建新的Slidev项目"""
-    global ACTIVE_SLIDEV_PROJECT
+def create_slidev(path: str, title: str, author: str) -> SlidevResult:
+    global ACTIVE_SLIDEV_PROJECT, SLIDEV_CONTENT
+
+    # clear global var
+    ACTIVE_SLIDEV_PROJECT = None
+    SLIDEV_CONTENT = []
     
     env_check = check_environment()
     if not env_check.success:
         return env_check
     
-    result = run_command(f"slidev create {path}")
-    if not result.success:
-        return result
-    
-    if load_slidev_content(path):
-        return SlidevResult(True, f"Slidev project created and loaded at {path}", path)
-    return SlidevResult(False, "Project created but failed to load content")
+    try:
+        # 创建目标文件夹
+        os.makedirs(path, exist_ok=True)
+        
+        # 在文件夹内创建slides.md文件
+        slides_path = os.path.join(path, 'slides.md')
+
+        # 如果已经存在 slides.md，则读入内容，初始化
+        if os.path.exists(slides_path):
+            load_slidev_content(path)
+            return SlidevResult(True, f"项目已经存在于 {path}/slides.md 中", SLIDEV_CONTENT)
+        else:
+            SLIDEV_CONTENT = []
+
+        with open(slides_path, 'w') as f:
+            f.write("""
+---
+theme: default
+layout: cover
+transition: slide-left
+background: https://images.unsplash.com/photo-1502189562704-87e622a34c85?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2100&q=80
+---
+
+# Your title
+## sub title
+
+""".strip())
+        
+        # 尝试加载内容
+        if not load_slidev_content(path):
+            return SlidevResult(False, "successfully create project but fail to load file", path)
+            
+        return SlidevResult(True, f"successfully load slidev project {path}", path)
+        
+    except OSError as e:
+        return SlidevResult(False, f"fail to create file: {str(e)}", path)
+    except IOError as e:
+        return SlidevResult(False, f"fail to create file: {str(e)}", path)
+    except Exception as e:
+        return SlidevResult(False, f"unknown error: {str(e)}", path)
+
 
 @mcp.tool(
     name='load_slidev',
-    description='加载已存在的Slidev项目',
+    description='load exist slidev project and get the current slidev markdown content',
 )
 def load_slidev(path: str) -> SlidevResult:
-    """加载已存在的Slidev项目"""
     if load_slidev_content(path):
-        return SlidevResult(True, f"Slidev project loaded from {path}", path)
+        return SlidevResult(True, f"Slidev project loaded from {path}", SLIDEV_CONTENT)
     return SlidevResult(False, f"Failed to load Slidev project from {path}")
+
 
 @mcp.tool(
     name='make_cover',
-    description='创建或更新封面页',
+    description='Create or update slidev cover. If user give enough information, you can use it to update cover page, otherwise you must ask the lacking information. `background` must be a valid url of image',
 )
 def make_cover(title: str, subtitle: str = "", author: str = "", date: str = "", background: str = "") -> SlidevResult:
-    """创建或更新封面页"""
     global SLIDEV_CONTENT
     
     if not ACTIVE_SLIDEV_PROJECT:
         return SlidevResult(False, "No active Slidev project. Please create or load one first.")
     
-    # 构建封面页的Markdown内容
-    cover_content = [
-        "# " + title,
-        "layout: cover",
-    ]
-    
-    if subtitle:
-        cover_content.append(f"## {subtitle}")
-    if author:
-        cover_content.append(f"**Author:** {author}")
-    if date:
-        cover_content.append(f"**Date:** {date}")
-    if background:
-        cover_content.append(f"background: {background}")
-    
+    template = f"""
+---
+theme: default
+layout: cover
+transition: slide-left
+background: {background}
+---
+
+# {title}
+## {subtitle}
+### Presented By {author} at {date}
+""".strip()
+
     # 更新或添加封面页
-    if SLIDEV_CONTENT:
-        SLIDEV_CONTENT[0] = '\n'.join(cover_content)
-    else:
-        SLIDEV_CONTENT.append('\n'.join(cover_content))
+    SLIDEV_CONTENT[0] = template
     
     save_slidev_content()
-    return SlidevResult(True, "Cover page updated", 0)  # 返回封面页索引
+    return SlidevResult(True, "Cover page updated", 0)
 
 @mcp.tool(
     name='add_page',
-    description='添加新幻灯片页面',
+    description="""Add new page.
+`content` is markdown format text to describe page content.
+- You can use ```code ```, latex or mermaid to represent more complex idea or concept. 
+- Too long or short content is forbidden.
+`layout` is slidev layout name, the document is here: https://sli.dev/builtin/layouts
+- If you don't know how to write slidev, you can query the example of the default theme here: https://raw.githubusercontent.com/slidevjs/themes/refs/heads/main/packages/theme-apple-basic/example.md
+- Remember to look up for this document at most once during the task. 
+"""
 )
 def add_page(content: str, layout: str = "default") -> SlidevResult:
-    """添加新幻灯片页面"""
     global SLIDEV_CONTENT
     
     if not ACTIVE_SLIDEV_PROJECT:
         return SlidevResult(False, "No active Slidev project. Please create or load one first.")
     
-    # 构建新页面内容
-    page_content = []
-    if layout and layout != "default":
-        page_content.append(f"layout: {layout}")
-    page_content.append(content)
-    
-    SLIDEV_CONTENT.append('\n'.join(page_content))
+    template = f"""
+---
+layout: {layout}
+transition: slide-left
+---
+
+{content}
+
+""".strip()
+
+    SLIDEV_CONTENT.append(template)
     page_index = len(SLIDEV_CONTENT) - 1
     save_slidev_content()
     
@@ -184,10 +256,17 @@ def add_page(content: str, layout: str = "default") -> SlidevResult:
 
 @mcp.tool(
     name='set_page',
-    description='设置指定页面的内容',
+    description="""
+`index`: the index of the page to set. 0 is cover, so you should use index in [1, {len(SLIDEV_CONTENT) - 1}]
+`content`: the markdown content to set.
+- You can use ```code ```, latex or mermaid to represent more complex idea or concept. 
+- Too long or short content is forbidden.
+`layout`: the layout of the page.
+- If you don't know how to write slidev, you can query the example of the default theme here: https://raw.githubusercontent.com/slidevjs/themes/refs/heads/main/packages/theme-apple-basic/example.md
+- Remember to look up for this document at most once during the task. 
+""",
 )
 def set_page(index: int, content: str, layout: str = "") -> SlidevResult:
-    """设置指定页面的内容"""
     global SLIDEV_CONTENT
     
     if not ACTIVE_SLIDEV_PROJECT:
@@ -196,23 +275,26 @@ def set_page(index: int, content: str, layout: str = "") -> SlidevResult:
     if index < 0 or index >= len(SLIDEV_CONTENT):
         return SlidevResult(False, f"Invalid page index: {index}")
     
-    # 构建页面内容
-    page_content = []
-    if layout:
-        page_content.append(f"layout: {layout}")
-    page_content.append(content)
+    template = f"""
+---
+layout: {layout}
+transition: slide-left
+---
+
+{content}
+
+""".strip()
     
-    SLIDEV_CONTENT[index] = '\n'.join(page_content)
+    SLIDEV_CONTENT[index] = template
     save_slidev_content()
     
     return SlidevResult(True, f"Page {index} updated", index)
 
 @mcp.tool(
     name='get_page',
-    description='获取指定页面的内容',
+    description='get the content of the `index` th page',
 )
 def get_page(index: int) -> SlidevResult:
-    """获取指定页面的内容"""
     if not ACTIVE_SLIDEV_PROJECT:
         return SlidevResult(False, "No active Slidev project. Please create or load one first.")
     
@@ -223,23 +305,25 @@ def get_page(index: int) -> SlidevResult:
 
 @mcp.tool(
     name='start_slidev',
-    description='启动Slidev演示文稿'
+    description='launch a http web server to display slidev content'
 )
 def start_slidev() -> SlidevResult:
-    """启动Slidev开发服务器"""
     if not ACTIVE_SLIDEV_PROJECT:
         return SlidevResult(False, "No active Slidev project. Please create or load one first.")
-    return run_command(f"cd {ACTIVE_SLIDEV_PROJECT['path']} && slidev")
+    
+    project_path = ACTIVE_SLIDEV_PROJECT['path']
+    return run_command(f"cd {project_path} && yes | slidev --open")
 
-@mcp.tool(
-    name='export_slidev',
-    description='导出Slidev为PDF或其他格式',
-)
-def export_slidev(format: str = "pdf") -> SlidevResult:
-    """导出Slidev演示文稿"""
-    if not ACTIVE_SLIDEV_PROJECT:
-        return SlidevResult(False, "No active Slidev project. Please create or load one first.")
-    return run_command(f"cd {ACTIVE_SLIDEV_PROJECT['path']} && slidev export --format {format}")
+
+# @mcp.tool(
+#     name='export_slidev',
+#     description='导出Slidev为PDF或其他格式',
+# )
+# def export_slidev(format: str = "pdf") -> SlidevResult:
+#     """导出Slidev演示文稿"""
+#     if not ACTIVE_SLIDEV_PROJECT:
+#         return SlidevResult(False, "No active Slidev project. Please create or load one first.")
+#     return run_command(f"cd {ACTIVE_SLIDEV_PROJECT['path']} && slidev export --format {format}")
 
 if __name__ == "__main__":
     mcp.run(transport='stdio')

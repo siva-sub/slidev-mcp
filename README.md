@@ -1,27 +1,13 @@
-<div align="center">
-  <h1>
-    <img src="https://api.iconify.design/logos:slidev.svg" width="40" height="40" alt="Slidev"/>
-    slidev-mcp 
-    <img src="https://api.iconify.design/logos:openai-icon.svg" width="40" height="40" alt="AI"/>
-  </h1>
-  <p>AI-powered Professional Slide Creation Made Easy!</p>
-  
-  <div>
-    <img src="https://img.shields.io/badge/Slidev-@latest-blue?logo=slidev" alt="Slidev"/>
-    <img src="https://img.shields.io/badge/AI-Large%20Language%20Model-orange?logo=openai" alt="AI"/>
-    <img src="https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript" alt="TypeScript"/>
-    <img src="https://img.shields.io/badge/Node.js-18+-green?logo=node.js" alt="Node.js"/>
-    <img src="https://img.shields.io/npm/v/slidev-mcp?color=red&logo=npm" alt="npm version"/>
-  </div>
-</div>
+# Slidev MCP Server
 
-## ✨ Introduction
+A Model Context Protocol (MCP) server that enables AI assistants to create professional Slidev presentations with advanced features like bulk slide generation, animations, themes, and interactive components.
 
-slidev-mcp is an intelligent slide generation tool based on [Slidev](https://github.com/slidevjs/slidev) that integrates large language model technology, allowing users to automatically generate professional online PPT presentations with simple descriptions.
+<a href="https://sli.dev/"><img src="https://img.shields.io/badge/Slidev-2.0-blue" alt="Slidev Version"></a>
+<a href="https://www.npmjs.com/package/slidev-mcp"><img src="https://img.shields.io/npm/v/slidev-mcp" alt="npm version"></a>
+<a href="https://github.com/siva-sub/slidev-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
 
-This is a TypeScript port of the original Python implementation, designed for easy installation and deployment as an npm package.
+## Features
 
-<img src="https://api.iconify.design/mdi:robot-happy-outline.svg" width="20" height="20" alt="AI"/> **Key Features**:
 - 🚀 **Bulk Slide Creation** - Generate complete presentations with one command
 - 🎨 **Theme Customization** - Apply predefined or custom themes
 - ✨ **Animation Support** - Add v-click, v-motion, and other animations
@@ -29,231 +15,242 @@ This is a TypeScript port of the original Python implementation, designed for ea
 - 📊 **Multiple Layouts** - Use image-left, two-cols, iframe, and other layouts
 - 🔍 **Slide Review** - Get AI-powered suggestions for improvement
 - 🎯 **Style Options** - Choose from minimal, detailed, visual, or academic styles
-- 🌐 **Web Search** - Extract content from URLs for presentation material
 
-## 🚀 Quick Start
+## Installation
 
-### Installation
+### Prerequisites
 
-#### Option 1: NPM Package (Recommended)
+- Node.js 18+ 
+- npm or yarn
+
+### Quick Start
+
+#### Install via npm
 ```bash
 npm install -g slidev-mcp
 ```
 
-#### Option 2: Direct from GitHub
-```bash
-npx slidev-mcp
+#### Configure Claude Desktop
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "slidev-mcp"
+    }
+  }
+}
 ```
 
-### Configuration
-
-Add to your Claude Desktop or MCP client configuration:
+Or use npx:
 
 ```json
 {
   "mcpServers": {
     "slidev-mcp": {
       "command": "npx",
-      "args": ["slidev-mcp"],
-      "description": "AI-powered Slidev presentation generator"
+      "args": ["slidev-mcp"]
     }
   }
 }
 ```
 
-Or if installed globally:
+## Usage
+
+### Create a Presentation
+
+Tell your AI assistant:
+- "Create a presentation about TypeScript"
+- "Generate a 15-slide presentation on Machine Learning with animations"
+- "Create a visual presentation about React hooks with dark theme"
+
+### Bulk Slide Generation
+
+```typescript
+// Example request
+"Create a 20-slide presentation about Web Development with:
+- Visual style
+- Corporate theme
+- Animations enabled
+- Code examples
+- Images included"
+```
+
+### Apply Themes
+
+```typescript
+// Predefined themes
+"Apply the corporate theme"
+"Use the dark theme"
+"Switch to minimal theme"
+
+// Custom theme
+"Create a custom theme with blue colors and modern fonts"
+```
+
+### Add Components
+
+```typescript
+"Add a YouTube video to slide 5"
+"Insert a tweet on slide 3"
+"Add a mermaid diagram to the current slide"
+"Include a code example with syntax highlighting"
+```
+
+### Web Content
+
+When you need to include content from the web:
+- If you provide a URL, the assistant will suggest you search the web yourself
+- Copy the relevant content you want to include
+- The assistant will help format it for your presentation
+
+## Available Tools
+
+### Core Operations
+- `create_slidev` - Create new Slidev project
+- `load_slidev` - Load existing project
+- `make_cover` - Create/update cover slide
+- `add_page` - Add new slide
+- `set_page` - Update slide content
+- `get_page` - Get slide by index
+- `get_all_slides` - List all slides
+
+### Advanced Features
+- `create_bulk_slides` - Generate complete presentation
+- `apply_theme` - Apply themes
+- `add_animation` - Add animations
+- `add_component` - Insert components
+- `review_slides` - Get AI suggestions
+
+### Utilities
+- `websearch` - Extract content from URLs
+- `get_slidev_usage` - Get Slidev documentation
+- `check_environment` - Verify setup
+- `start_slidev` - Get server command
+
+## Themes
+
+### Predefined Themes
+- **corporate** - Professional business theme
+- **creative** - Colorful gradient design
+- **minimal** - Clean minimalist style
+- **dark** - Dark mode for technical content
+
+### Custom Themes
+Create themes with:
+- Primary/secondary colors
+- Background colors
+- Font families
+- Custom CSS
+- Transition effects
+
+## Components
+
+### Interactive Elements
+- `Tweet` - Embed tweets
+- `Youtube` - YouTube videos
+- `SlidevVideo` - Local videos
+- `Arrow` - Draw arrows
+- `Toc` - Table of contents
+
+### Layout Components
+- `Transform` - Scale elements
+- `AutoFitText` - Auto-resize text
+- `LightOrDark` - Theme-aware content
+
+### Diagrams
+- `Mermaid` - Flowcharts and diagrams
+
+## Animations
+
+### Click Animations
+- `v-click` - Reveal on click
+- `v-after` - Show after previous
+- `v-click-hide` - Hide on click
+
+### Motion Effects
+- `v-motion` - Smooth transitions
+- Custom keyframe animations
+
+### Transitions
+- fade, fade-out
+- slide-left, slide-right
+- slide-up, slide-down
+- view-transition
+
+## Development
+
+### Build from Source
+
+```bash
+# Clone repository
+git clone https://github.com/siva-sub/slidev-mcp.git
+cd slidev-mcp
+
+# Install dependencies
+npm install
+
+# Build project
+npm run build
+
+# Run in development
+npm run dev
+```
+
+### Local Testing
+
+Configure Claude Desktop with local path:
 
 ```json
 {
   "mcpServers": {
     "slidev-mcp": {
-      "command": "slidev-mcp",
-      "description": "AI-powered Slidev presentation generator"
+      "command": "node",
+      "args": ["/path/to/slidev-mcp/dist/index.js"]
     }
   }
 }
 ```
 
-## 📚 Available Tools
+## Troubleshooting
 
-### Core Tools
-- **create_slidev** - Create a new Slidev project
-- **load_slidev** - Load existing Slidev project
-- **make_cover** - Create or update presentation cover page
-- **add_page** - Add new slide to presentation
-- **set_page** - Update specific slide content
-- **get_page** - Retrieve slide content by index
-- **get_all_slides** - Get all slides with metadata
-- **start_slidev** - Get command to start Slidev server
+### Common Issues
 
-### Advanced Tools (v0.2.0+)
-- **create_bulk_slides** - Generate complete presentation with multiple slides
-- **apply_theme** - Apply predefined or custom themes
-- **add_animation** - Add animations to slides (v-click, v-motion, etc.)
-- **add_component** - Insert interactive components (Tweet, Youtube, etc.)
-- **review_slides** - Get AI-powered slide review and suggestions
-
-### Utility Tools
-- **websearch** - Extract content from web URLs
-- **get_slidev_usage** - Get comprehensive Slidev documentation
-- **check_environment** - Verify Node.js and Slidev CLI installation
-
-## 🎯 Usage Examples
-
-### Basic Presentation
-```javascript
-// Create a simple presentation
-"Create a presentation about TypeScript"
-
-// The AI will:
-// 1. Create a new Slidev project
-// 2. Generate cover slide
-// 3. Add content slides
-// 4. Provide commands to start the server
-```
-
-### Bulk Slide Generation
-```javascript
-// Generate complete presentation
-"Create a 15-slide presentation about Machine Learning with visual style and animations"
-
-// Options:
-// - slideCount: 15
-// - style: 'visual' (minimal, detailed, visual, academic)
-// - includeAnimations: true
-// - includeImages: true
-// - theme: 'corporate'
-```
-
-### Theme Customization
-```javascript
-// Apply predefined theme
-"Apply the dark theme to my presentation"
-
-// Or create custom theme
-"Create a custom theme with blue primary color and modern fonts"
-```
-
-### Adding Components
-```javascript
-// Add interactive elements
-"Add a YouTube video to slide 3"
-"Insert a tweet on slide 5"
-"Add a mermaid diagram showing the workflow"
-```
-
-## 🎨 Themes
-
-### Predefined Themes
-- **corporate** - Professional blue theme for business presentations
-- **creative** - Colorful gradient theme for creative content
-- **minimal** - Clean, minimalist design
-- **dark** - Dark mode theme for technical presentations
-
-### Custom Themes
-Create your own theme with:
-- Primary/secondary colors
-- Background colors
-- Font families
-- Custom CSS
-- Transition styles
-
-## 🔧 Advanced Features
-
-### Animation Types
-- **v-click** - Reveal elements on click
-- **v-after** - Show after previous element
-- **v-motion** - Smooth motion animations
-- **v-mark** - Highlight text with markers
-- **transitions** - Slide transitions (fade, slide-left, etc.)
-
-### Layout Options
-- **default** - Standard layout
-- **center** - Centered content
-- **cover** - Cover slide layout
-- **image-left/right** - Image with text layouts
-- **two-cols** - Two column layout
-- **iframe** - Embed websites
-- **quote** - Quote layout
-
-### Components
-- **Tweet** - Embed tweets
-- **Youtube** - Embed YouTube videos
-- **SlidevVideo** - Local video player
-- **Toc** - Table of contents
-- **Arrow** - Draw arrows
-- **Transform** - Scale/transform elements
-- **Mermaid** - Diagrams and flowcharts
-
-## 🛠️ Development
-
-### Prerequisites
-- Node.js 18 or higher
-- npm or yarn
-
-### Setup
-
-1. **Clone the repository**
+1. **Slidev not found**
    ```bash
-   git clone https://github.com/siva-sub/slidev-mcp.git
-   cd slidev-mcp
+   npm install -g @slidev/cli
    ```
 
-2. **Install dependencies**
+2. **Node version error**
+   - Ensure Node.js 18+ is installed
+
+3. **Permission issues**
    ```bash
-   npm install
+   sudo npm install -g slidev-mcp
    ```
 
-3. **Build the project**
-   ```bash
-   npm run build
-   ```
+## Contributing
 
-4. **Start development server**
-   ```bash
-   npm run dev
-   ```
+Contributions welcome! Please:
 
-### Testing with Claude Desktop
+1. Fork the repository
+2. Create feature branch
+3. Make your changes
+4. Submit pull request
 
-1. Configure Claude Desktop with the local development path:
-   ```json
-   {
-     "mcpServers": {
-       "slidev-mcp": {
-         "command": "node",
-         "args": ["/path/to/slidev-mcp/dist/index.js"],
-         "description": "Local development Slidev MCP"
-       }
-     }
-   }
-   ```
+## Changelog
 
-2. Restart Claude Desktop and test the integration
+### v0.3.0 (Latest)
+- 📚 Massively enhanced guide prompt with comprehensive Slidev documentation
+- 🎯 Added detailed layout, animation, and component references
+- ✨ Improved bulk slide generation with better patterns
+- 🎨 Enhanced theme system documentation
+- 📝 Professional README format
+- 🔧 Better TypeScript types and error handling
 
-## 📄 License
-
-MIT License © 2024 [Siva Sub](https://github.com/siva-sub)
-
-## 🙏 Acknowledgments
-
-- Original Python implementation by [LSTM-Kirigaya](https://github.com/LSTM-Kirigaya)
-- Built on [Slidev](https://github.com/slidevjs/slidev) by Anthony Fu
-- Uses [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) by Anthropic
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 Changelog
-
-### v0.2.0 (Latest)
+### v0.2.0
 - ✨ Added bulk slide generation
 - 🎨 Theme customization support
 - 🎭 Animation capabilities
@@ -267,3 +264,13 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - 📦 NPM package support
 - 🔧 Basic slide operations
 - 🌐 Web search integration
+
+## License
+
+MIT © [Siva Sub](https://github.com/siva-sub)
+
+## Credits
+
+- Original Python implementation by [LSTM-Kirigaya](https://github.com/LSTM-Kirigaya/slidev-mcp)
+- Built on [Slidev](https://sli.dev/) by Anthony Fu
+- Uses [Model Context Protocol](https://modelcontextprotocol.io/) by Anthropic

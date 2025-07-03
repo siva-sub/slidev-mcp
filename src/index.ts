@@ -12,15 +12,15 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import SlidevManager from './slidev-manager.js';
 import { SlideGenerator } from './slide-generator.js';
-import { websearch } from './websearch.js';
 import { checkEnvironment } from './utils.js';
+import { websearch } from './websearch.js';
 import { SLIDEV_USAGE_GUIDE, GUIDE_PROMPT } from './constants.js';
 import { THEME_PRESETS } from './slide-templates.js';
 
 const server = new Server(
   {
     name: 'slidev-mcp',
-    version: '0.2.0',
+    version: '0.3.0',
   },
   {
     capabilities: {
@@ -72,20 +72,6 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
-      {
-        name: 'websearch',
-        description: 'Search the given https URL and get the markdown text of the website',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            url: {
-              type: 'string',
-              description: 'The URL to search and extract content from',
-            },
-          },
-          required: ['url'],
-        },
-      },
       {
         name: 'get_slidev_usage',
         description: 'Get comprehensive usage documentation of Slidev including layouts, animations, and components',
@@ -370,6 +356,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: 'object',
           properties: {},
+        },
+      },
+      {
+        name: 'websearch',
+        description: 'Extract content from a URL for presentation material. If the user provides a URL, ask them to search the web themselves and provide the relevant text content.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            url: {
+              type: 'string',
+              description: 'The URL to fetch content from',
+            },
+          },
+          required: ['url'],
         },
       },
       {
@@ -712,7 +712,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Slidev MCP server v0.2.0 running on stdio');
+  console.error('Slidev MCP server v0.3.0 running on stdio');
 }
 
 main().catch((error) => {

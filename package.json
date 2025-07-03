@@ -1,0 +1,48 @@
+{
+  "name": "slidev-mcp",
+  "version": "0.1.0",
+  "description": "AI-powered Professional Slide Creation Made Easy! A Model Context Protocol (MCP) server for Slidev integration.",
+  "main": "dist/index.js",
+  "bin": {
+    "slidev-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepare": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "slidev",
+    "mcp",
+    "ai",
+    "presentation",
+    "slides",
+    "markdown"
+  ],
+  "author": "Siva Sub",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.7.0",
+    "node-fetch": "^3.3.2",
+    "fs-extra": "^11.2.0",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/fs-extra": "^11.0.4",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/siva-sub/slidev-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/siva-sub/slidev-mcp/issues"
+  },
+  "homepage": "https://github.com/siva-sub/slidev-mcp#readme"
+}

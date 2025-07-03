@@ -1,0 +1,45 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Config files
+tsconfig.json
+.editorconfig
+.eslintrc.json
+.prettierrc
+
+# Test files
+test/
+*.test.js
+*.test.ts
+test-mcp.js
+
+# Development files
+.vscode/
+.idea/
+*.log
+.DS_Store
+
+# Python files
+*.py
+*.pyc
+__pycache__/
+pyproject.toml
+.python-version
+uv.lock
+
+# Git files
+.git/
+.gitignore
+
+# Documentation source
+docs/
+
+# Other
+.env
+.env.local
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

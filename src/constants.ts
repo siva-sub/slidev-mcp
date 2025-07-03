@@ -1,6 +1,36 @@
 export const SLIDEV_USAGE_GUIDE = `
 ## Here is the layout usage of slidev
 
+### Basic Layouts
+
+\`\`\`yaml
+---
+layout: default
+---
+\`\`\`
+
+\`\`\`yaml
+---
+layout: center
+class: text-center
+---
+\`\`\`
+
+\`\`\`yaml
+---
+layout: cover
+background: https://source.unsplash.com/collection/94734566/1920x1080
+---
+\`\`\`
+
+\`\`\`yaml
+---
+layout: quote
+---
+\`\`\`
+
+### Image Layouts
+
 \`\`\`yaml
 ---
 layout: image-left
@@ -52,6 +82,8 @@ backgroundSize: 20em 70%
 ---
 \`\`\`
 
+### IFrame Layouts
+
 ##  \`iframe-left\` [​](https://sli.dev/builtin/layouts#iframe-left)
 Shows a web page on the left side of the screen, the content will be placed on the right side.
 ### Usage [​](https://sli.dev/builtin/layouts#usage-3)
@@ -89,6 +121,7 @@ url: https://github.com/slidevjs/slidev
 ---
 \`\`\`
 
+### Multi-Column Layouts
 
 \`\`\`md
 ---
@@ -116,6 +149,173 @@ This shows on the left
 # Right
 This shows on the right
 \`\`\`
+
+## Advanced Components
+
+### Animations
+
+#### v-click
+\`\`\`html
+<div v-click>This shows up when you click the slide.</div>
+\`\`\`
+
+#### v-clicks for lists
+\`\`\`md
+<v-clicks>
+
+- Item 1
+- Item 2
+- Item 3
+
+</v-clicks>
+\`\`\`
+
+#### v-motion
+\`\`\`html
+<div
+  v-motion
+  :initial="{ x: -80 }"
+  :enter="{ x: 0 }"
+  :click-3="{ x: 80 }"
+  :leave="{ x: 1000 }"
+>
+  Slidev
+</div>
+\`\`\`
+
+#### v-mark
+\`\`\`html
+<span v-mark.underline.orange>inline markers</span>
+\`\`\`
+
+### Interactive Components
+
+#### Tweet Component
+\`\`\`html
+<Tweet id="1390115482657726468" />
+\`\`\`
+
+#### Youtube Component
+\`\`\`html
+<Youtube id="luoMHjh-XcQ" />
+\`\`\`
+
+#### Video Component
+\`\`\`html
+<SlidevVideo v-click autoplay controls>
+  <source src="/myMovie.mp4" type="video/mp4" />
+  <source src="/myMovie.webm" type="video/webm" />
+</SlidevVideo>
+\`\`\`
+
+#### Arrow Component
+\`\`\`html
+<Arrow x1="10" y1="20" x2="100" y2="200" />
+\`\`\`
+
+### Utility Components
+
+#### Table of Contents
+\`\`\`html
+<Toc />
+\`\`\`
+
+#### Link Component
+\`\`\`html
+<Link to="42">Go to slide 42</Link>
+<Link to="solutions" title="Go to solutions"/>
+\`\`\`
+
+#### LightOrDark Component
+\`\`\`html
+<LightOrDark>
+  <template #dark>Dark mode is on</template>
+  <template #light>Light mode is on</template>
+</LightOrDark>
+\`\`\`
+
+#### Transform Component
+\`\`\`html
+<Transform :scale="0.5">
+  <YourElements />
+</Transform>
+\`\`\`
+
+#### AutoFitText Component
+\`\`\`html
+<AutoFitText :max="200" :min="100" modelValue="Some text"/>
+\`\`\`
+
+### Mermaid Diagrams
+\`\`\`markdown
+\`\`\`mermaid {theme: 'neutral', scale: 0.8}
+graph TD
+B[Text] --> C{Decision}
+C -->|One| D[Result 1]
+C -->|Two| E[Result 2]
+\`\`\`
+\`\`\`
+
+### Code Highlighting
+
+#### Shiki Magic Move
+\`\`\`ts
+// step 1
+const author = reactive({
+  name: 'John Doe',
+  books: [
+    'Vue 2 - Advanced Guide',
+    'Vue 3 - Basic Guide',
+    'Vue 4 - The Mystery'
+  ]
+})
+\`\`\`
+
+### Styling
+
+#### CSS Grid
+\`\`\`html
+<div class="grid grid-cols-2 gap-4">
+  <div>The first column</div>
+  <div>The second column</div>
+</div>
+\`\`\`
+
+#### Flexbox
+\`\`\`html
+<div class="flex items-center">
+  <div>First block</div>
+  <div>Second block</div>
+</div>
+\`\`\`
+
+#### Scoped Styles
+\`\`\`md
+# This is Red
+
+<style>
+h1 {
+  color: red;
+}
+</style>
+\`\`\`
+
+### Transitions
+
+\`\`\`yaml
+---
+transition: slide-left
+---
+\`\`\`
+
+Available transitions:
+- fade
+- fade-out
+- slide-left
+- slide-right
+- slide-up
+- slide-down
+- view-transition
 
 ## Here is a demo of slidev
 
@@ -192,4 +392,21 @@ Please try to use the images crawled from the article as much as possible. They 
 If you encounter images, please make beautiful layouts instead of just stacking text and images vertically. If both images and text exist on a page, you should use image left, text right or image right, text left layout. By calling get_slidev_usage, you can get the usage of slidev and basic introduction. Please do not write custom layouts yourself. Please remember that you do not know how to write layouts.
 
 Before generating the manuscript, you can get a slidev template by calling get_slidev_usage, and you should imitate the template to write markdown.
+
+IMPORTANT: When creating presentations, consider these advanced features:
+1. Use animations (v-click, v-motion, v-after) to make slides more engaging
+2. Utilize different layouts (image-left, image-right, two-cols, iframe) for variety
+3. Add interactive components (Tweet, Youtube, SlidevVideo) when relevant
+4. Include code examples with syntax highlighting when appropriate
+5. Use Mermaid diagrams for visual representations
+6. Apply theme customization for brand consistency
+7. Consider using CSS Grid and Flexbox for custom layouts
+8. Add transitions between slides for smooth flow
+
+For bulk slide creation:
+- Generate a complete presentation with introduction, content, and conclusion
+- Include a table of contents slide
+- Add animations and transitions throughout
+- Use varied layouts to maintain visual interest
+- Include summary and thank you slides
 `;

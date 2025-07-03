@@ -11,14 +11,16 @@ import {
   ListPromptsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import SlidevManager from './slidev-manager.js';
+import { SlideGenerator } from './slide-generator.js';
 import { websearch } from './websearch.js';
 import { checkEnvironment } from './utils.js';
 import { SLIDEV_USAGE_GUIDE, GUIDE_PROMPT } from './constants.js';
+import { THEME_PRESETS } from './slide-templates.js';
 
 const server = new Server(
   {
     name: 'slidev-mcp',
-    version: '0.1.0',
+    version: '0.2.0',
   },
   {
     capabilities: {
@@ -28,8 +30,9 @@ const server = new Server(
   }
 );
 
-// Initialize Slidev manager
+// Initialize managers
 const slidevManager = new SlidevManager();
+const slideGenerator = new SlideGenerator();
 
 // List available prompts
 server.setRequestHandler(ListPromptsRequestSchema, async () => {
@@ -37,7 +40,7 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => {
     prompts: [
       {
         name: 'guide',
-        description: 'Guide the AI to use Slidev effectively',
+        description: 'Guide the AI to use Slidev effectively with advanced features',
       },
     ],
   };
@@ -49,7 +52,7 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
   
   if (name === 'guide') {
     return {
-      description: 'Guide the AI to use Slidev effectively',
+      description: 'Guide the AI to use Slidev effectively with advanced features',
       messages: [
         {
           role: 'user',
@@ -85,7 +88,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'get_slidev_usage',
-        description: 'Get usage document of Slidev',
+        description: 'Get comprehensive usage documentation of Slidev including layouts, animations, and components',
         inputSchema: {
           type: 'object',
           properties: {},
@@ -219,6 +222,154 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
           },
           required: ['index'],
+        },
+      },
+      {
+        name: 'get_all_slides',
+        description: 'Get all slides with their content, layout, and metadata',
+        inputSchema: {
+          type: 'object',
+          properties: {},
+        },
+      },
+      {
+        name: 'create_bulk_slides',
+        description: 'Create a complete presentation with multiple slides at once based on topic',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            topic: {
+              type: 'string',
+              description: 'The main topic of the presentation',
+            },
+            slideCount: {
+              type: 'number',
+              description: 'Number of slides to generate (default: 10)',
+              default: 10,
+            },
+            style: {
+              type: 'string',
+              enum: ['minimal', 'detailed', 'visual', 'academic'],
+              description: 'Presentation style',
+              default: 'detailed',
+            },
+            includeAnimations: {
+              type: 'boolean',
+              description: 'Include animations in slides',
+              default: true,
+            },
+            includeCode: {
+              type: 'boolean',
+              description: 'Include code examples',
+              default: false,
+            },
+            includeImages: {
+              type: 'boolean',
+              description: 'Include images in slides',
+              default: true,
+            },
+            theme: {
+              type: 'string',
+              description: 'Theme to apply',
+              default: 'default',
+            },
+            customInstructions: {
+              type: 'string',
+              description: 'Additional custom instructions for slide generation',
+            },
+          },
+          required: ['topic'],
+        },
+      },
+      {
+        name: 'apply_theme',
+        description: 'Apply a theme to the presentation',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            themeName: {
+              type: 'string',
+              enum: ['corporate', 'creative', 'minimal', 'dark', 'custom'],
+              description: 'Predefined theme name or "custom"',
+            },
+            customTheme: {
+              type: 'object',
+              description: 'Custom theme configuration (if themeName is "custom")',
+              properties: {
+                name: { type: 'string' },
+                primaryColor: { type: 'string' },
+                secondaryColor: { type: 'string' },
+                backgroundColor: { type: 'string' },
+                fontFamily: { type: 'string' },
+                fontSize: { type: 'string' },
+                transition: { type: 'string' },
+                customCSS: { type: 'string' },
+              },
+            },
+          },
+          required: ['themeName'],
+        },
+      },
+      {
+        name: 'add_animation',
+        description: 'Add animation to a specific slide',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            slideIndex: {
+              type: 'number',
+              description: 'Index of the slide to add animation to',
+            },
+            animationType: {
+              type: 'string',
+              enum: ['v-click', 'v-after', 'v-click-hide', 'v-motion', 'transition'],
+              description: 'Type of animation',
+            },
+            target: {
+              type: 'string',
+              description: 'Target element or text to animate',
+            },
+            options: {
+              type: 'object',
+              description: 'Animation options',
+            },
+          },
+          required: ['slideIndex', 'animationType'],
+        },
+      },
+      {
+        name: 'add_component',
+        description: 'Add a component (Tweet, Youtube, Video, etc.) to a slide',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            slideIndex: {
+              type: 'number',
+              description: 'Index of the slide to add component to',
+            },
+            componentType: {
+              type: 'string',
+              enum: ['Tweet', 'Youtube', 'SlidevVideo', 'Arrow', 'Toc', 'Link', 'LightOrDark', 'Transform', 'AutoFitText'],
+              description: 'Type of component to add',
+            },
+            props: {
+              type: 'object',
+              description: 'Component properties',
+            },
+            children: {
+              type: 'string',
+              description: 'Component children content',
+            },
+          },
+          required: ['slideIndex', 'componentType'],
+        },
+      },
+      {
+        name: 'review_slides',
+        description: 'Review and get suggestions for the current presentation',
+        inputSchema: {
+          type: 'object',
+          properties: {},
         },
       },
       {
@@ -365,6 +516,177 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
       
+      case 'get_all_slides': {
+        const result = slidevManager.getAllSlides();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+      
+      case 'create_bulk_slides': {
+        const input = args as {
+          topic: string;
+          slideCount?: number;
+          style?: 'minimal' | 'detailed' | 'visual' | 'academic';
+          includeAnimations?: boolean;
+          includeCode?: boolean;
+          includeImages?: boolean;
+          theme?: string;
+          customInstructions?: string;
+        };
+        
+        if (!slidevManager.hasActiveProject()) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  success: false,
+                  message: 'No active Slidev project. Please create or load one first.',
+                }, null, 2),
+              },
+            ],
+          };
+        }
+        
+        const slides = slideGenerator.generateBulkSlides(input);
+        
+        // Clear existing slides and add generated ones
+        const content = slidevManager.getSlidevContent();
+        content.length = 0; // Clear array
+        
+        for (const slide of slides) {
+          if (slide.index === 0) {
+            // Update cover slide
+            await slidevManager.makeCover({
+              title: input.topic,
+              subtitle: 'A Comprehensive Overview',
+              background: slide.frontmatter?.background,
+            });
+          } else {
+            // Add other slides
+            const slideContent = slide.content;
+            const layout = slide.layout || 'default';
+            await slidevManager.addPage(slideContent, layout);
+          }
+        }
+        
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: true,
+                message: `Generated ${slides.length} slides for topic: ${input.topic}`,
+                output: slides,
+              }, null, 2),
+            },
+          ],
+        };
+      }
+      
+      case 'apply_theme': {
+        const { themeName, customTheme } = args as {
+          themeName: string;
+          customTheme?: any;
+        };
+        
+        let themeConfig;
+        if (themeName === 'custom' && customTheme) {
+          themeConfig = customTheme;
+        } else {
+          themeConfig = THEME_PRESETS[themeName as keyof typeof THEME_PRESETS];
+          if (!themeConfig) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    success: false,
+                    message: `Unknown theme: ${themeName}`,
+                  }, null, 2),
+                },
+              ],
+            };
+          }
+        }
+        
+        const result = await slidevManager.applyTheme(themeConfig);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+      
+      case 'add_animation': {
+        const { slideIndex, animationType, target, options } = args as {
+          slideIndex: number;
+          animationType: 'v-click' | 'v-after' | 'v-click-hide' | 'v-motion' | 'transition';
+          target?: string;
+          options?: any;
+        };
+        
+        const result = await slidevManager.addAnimation(slideIndex, {
+          type: animationType,
+          target,
+          options,
+        });
+        
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+      
+      case 'add_component': {
+        const { slideIndex, componentType, props, children } = args as {
+          slideIndex: number;
+          componentType: string;
+          props?: any;
+          children?: string;
+        };
+        
+        const result = await slidevManager.addComponent(slideIndex, {
+          type: componentType,
+          props,
+          children,
+        });
+        
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+      
+      case 'review_slides': {
+        const result = slidevManager.reviewSlides();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+      
       case 'start_slidev': {
         const result = slidevManager.startSlidiv();
         return {
@@ -390,7 +712,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Slidev MCP server running on stdio');
+  console.error('Slidev MCP server v0.2.0 running on stdio');
 }
 
 main().catch((error) => {

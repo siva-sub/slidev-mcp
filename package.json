@@ -1,6 +1,6 @@
 {
   "name": "slidev-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "AI-powered Professional Slide Creation Made Easy! A Model Context Protocol (MCP) server for Slidev integration.",
   "main": "dist/index.js",
   "bin": {

@@ -621,7 +621,12 @@ Contributions welcome! Please:
 
 ## Changelog
 
-### v0.3.0 (Latest)
+### v0.3.1 (Latest)
+- 📚 Added comprehensive installation instructions for all major MCP clients
+- 🔧 Added detailed Available Tools documentation
+- 📝 Improved README organization with collapsible sections
+
+### v0.3.0
 - 📚 Massively enhanced guide prompt with comprehensive Slidev documentation
 - 🎯 Added detailed layout, animation, and component references
 - ✨ Improved bulk slide generation with better patterns

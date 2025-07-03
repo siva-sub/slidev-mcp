@@ -20,7 +20,7 @@ import { THEME_PRESETS } from './slide-templates.js';
 const server = new Server(
   {
     name: 'slidev-mcp',
-    version: '0.3.0',
+    version: '0.3.1',
   },
   {
     capabilities: {
@@ -712,7 +712,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Slidev MCP server v0.3.0 running on stdio');
+  console.error('Slidev MCP server v0.3.1 running on stdio');
 }
 
 main().catch((error) => {

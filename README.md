@@ -40,9 +40,10 @@ A Model Context Protocol (MCP) server that enables AI assistants to create profe
 
 ### Install
 
-#### Recommended: Using npm/npx
+<details>
+<summary><b>Install in Claude Desktop</b></summary>
 
-In Claude Desktop, go to Settings > Developer > Edit Config (JSON) and add:
+Add this to your Claude Desktop `claude_desktop_config.json` file. See [Claude Desktop MCP docs](https://modelcontextprotocol.io/quickstart/user) for more info.
 
 ```json
 {
@@ -55,24 +56,68 @@ In Claude Desktop, go to Settings > Developer > Edit Config (JSON) and add:
 }
 ```
 
-This method ensures you always use the latest version without manual updates.
-
-#### Alternative: Direct npx execution
+<details>
+<summary>Alternative: Use Bun</summary>
 
 ```json
 {
   "mcpServers": {
     "slidev-mcp": {
-      "command": "npx",
-      "args": ["slidev-mcp"]
+      "command": "bunx",
+      "args": ["-y", "slidev-mcp"]
     }
   }
 }
 ```
 
-#### Using with other MCP Clients
+</details>
 
-**Cline:**
+<details>
+<summary>Alternative: Use Deno</summary>
+
+```json
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "deno",
+      "args": ["run", "--allow-env", "--allow-net", "--allow-read", "--allow-write", "npm:slidev-mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+</details>
+
+<details>
+<summary><b>Install in Claude Code</b></summary>
+
+Run this command in your terminal. See [Claude Code MCP docs](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials#set-up-model-context-protocol-mcp) for more info.
+
+```sh
+claude mcp add slidev-mcp -- npx -y slidev-mcp
+```
+
+<details>
+<summary>Alternative: Using Bun</summary>
+
+```sh
+claude mcp add slidev-mcp -- bunx -y slidev-mcp
+```
+
+</details>
+
+</details>
+
+<details>
+<summary><b>Install in Gemini CLI</b></summary>
+
+See [Gemini CLI Configuration](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/configuration.md) for details.
+
+1. Open the Gemini CLI settings file. The location is `~/.gemini/settings.json` (where `~` is your home directory).
+2. Add the following to the `mcpServers` object in your `settings.json` file:
+
 ```json
 {
   "mcpServers": {
@@ -84,22 +129,218 @@ This method ensures you always use the latest version without manual updates.
 }
 ```
 
-**Zed:**
+If the `mcpServers` object does not exist, create it.
+
+</details>
+
+<details>
+<summary><b>Install in Amazon Q Developer CLI</b></summary>
+
+Add this to your Amazon Q Developer CLI configuration file. See [Amazon Q Developer CLI docs](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-mcp-configuration.html) for more details.
+
 ```json
 {
-  "language_models": {
-    "anthropic": {
-      "api_key": "your_key",
-      "mcp_servers": {
-        "slidev-mcp": {
-          "command": "npx",
-          "args": ["-y", "slidev-mcp"]
-        }
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "npx",
+      "args": ["-y", "slidev-mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Install in Cursor</b></summary>
+
+Add this to your Cursor `~/.cursor/mcp.json` file. See [Cursor MCP docs](https://docs.cursor.com/context/model-context-protocol) for more info.
+
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=slidev-mcp&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsInNsaWRldi1tY3AiXX0%3D)
+
+```json
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "npx",
+      "args": ["-y", "slidev-mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Install in Windsurf</b></summary>
+
+Add this to your Windsurf MCP config file. See [Windsurf MCP docs](https://docs.windsurf.com/windsurf/mcp) for more info.
+
+```json
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "npx",
+      "args": ["-y", "slidev-mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Install in VS Code</b></summary>
+
+Add this to your VS Code MCP config file. See [VS Code MCP docs](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) for more info.
+
+```json
+"mcp": {
+  "servers": {
+    "slidev-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "slidev-mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Install in Zed</b></summary>
+
+Add this to your Zed `settings.json`. See [Zed Context Server docs](https://zed.dev/docs/assistant/context-servers) for more info.
+
+```json
+{
+  "context_servers": {
+    "slidev-mcp": {
+      "command": {
+        "path": "npx",
+        "args": ["-y", "slidev-mcp"]
       }
     }
   }
 }
 ```
+
+</details>
+
+<details>
+<summary><b>Install in Cline</b></summary>
+
+Add this tool to your Cline MCP settings file:
+
+```json
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "npx",
+      "args": ["-y", "slidev-mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Install in JetBrains AI Assistant</b></summary>
+
+See [JetBrains AI Assistant Documentation](https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html) for more details.
+
+1. In JetBrains IDEs go to `Settings` → `Tools` → `AI Assistant` → `Model Context Protocol (MCP)`
+2. Click `+ Add`.
+3. Click on `Command` in the top-left corner of the dialog and select the As JSON option from the list
+4. Add this configuration and click `OK`
+
+```json
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "npx",
+      "args": ["-y", "slidev-mcp"]
+    }
+  }
+}
+```
+
+5. Click `Apply` to save changes.
+
+</details>
+
+<details>
+<summary><b>Install in Windows</b></summary>
+
+The configuration on Windows is slightly different. Use this format for Windows systems:
+
+```json
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "slidev-mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Install via Smithery</b></summary>
+
+To install Slidev MCP Server for any client automatically via [Smithery](https://smithery.ai):
+
+```bash
+npx -y @smithery/cli install slidev-mcp --client <CLIENT_NAME>
+```
+
+Replace `<CLIENT_NAME>` with your MCP client (e.g., `claude-desktop`, `cursor`, `vscode`, etc.).
+
+</details>
+
+<details>
+<summary><b>Using Docker</b></summary>
+
+If you prefer to run the MCP server in a Docker container:
+
+1. **Create a Dockerfile:**
+
+   ```dockerfile
+   FROM node:18-alpine
+   
+   WORKDIR /app
+   
+   # Install the latest version globally
+   RUN npm install -g slidev-mcp @slidev/cli
+   
+   # Default command to run the server
+   CMD ["slidev-mcp"]
+   ```
+
+2. **Build the image:**
+
+   ```bash
+   docker build -t slidev-mcp .
+   ```
+
+3. **Configure your MCP client:**
+
+   ```json
+   {
+     "mcpServers": {
+       "slidev-mcp": {
+         "command": "docker",
+         "args": ["run", "-i", "--rm", "-v", "${PWD}:/data", "-w", "/data", "slidev-mcp"]
+       }
+     }
+   }
+   ```
+
+</details>
 
 ### Alternative Installation Methods
 
@@ -412,3 +653,72 @@ MIT © [Siva Sub](https://github.com/siva-sub)
 - Original Python implementation by [LSTM-Kirigaya](https://github.com/LSTM-Kirigaya/slidev-mcp)
 - Built on [Slidev](https://sli.dev/) by Anthony Fu
 - Uses [Model Context Protocol](https://modelcontextprotocol.io/) by Anthropic
+
+## 🔧 Available Tools
+
+Slidev MCP provides the following tools that LLMs can use:
+
+### Core Slide Operations
+- `create_slidev`: Create a new Slidev project
+  - `path` (required): Directory path for the project
+  - `title` (required): Presentation title
+  - `author` (required): Presentation author
+  
+- `load_slidev`: Load existing Slidev project
+  - `path` (required): Path to existing project
+
+- `make_cover`: Create/update cover slide
+  - `title` (required): Slide title
+  - `subtitle` (optional): Slide subtitle
+  - `author` (optional): Author name
+  - `background` (optional): Background image URL
+
+- `add_page`: Add new slide
+  - `content` (required): Markdown content
+  - `layout` (optional): Layout type
+
+- `set_page`: Update specific slide
+  - `index` (required): Slide index
+  - `content` (required): New content
+  - `layout` (optional): Layout type
+
+- `get_page`: Retrieve slide content
+  - `index` (required): Slide index
+
+- `get_all_slides`: List all slides
+
+### Advanced Features
+- `create_bulk_slides`: Generate complete presentation
+  - `topic` (required): Presentation topic
+  - `slideCount` (optional): Number of slides (default: 10)
+  - `style` (optional): minimal, detailed, visual, or academic
+  - `includeAnimations` (optional): Add animations
+  - `includeCode` (optional): Include code examples
+  - `includeImages` (optional): Add images
+  - `theme` (optional): Theme name
+  - `customInstructions` (optional): Additional instructions
+
+- `apply_theme`: Apply presentation theme
+  - `themeName` (required): Theme name or "custom"
+  - `customTheme` (optional): Custom theme config
+
+- `add_animation`: Add animations to slides
+  - `slideIndex` (required): Target slide
+  - `animationType` (required): Animation type
+  - `target` (optional): Target element
+  - `options` (optional): Animation options
+
+- `add_component`: Insert components
+  - `slideIndex` (required): Target slide
+  - `componentType` (required): Component type
+  - `props` (optional): Component properties
+  - `children` (optional): Component content
+
+- `review_slides`: Get AI-powered review
+
+### Utilities
+- `get_slidev_usage`: Get Slidev documentation
+- `check_environment`: Verify system setup
+- `start_slidev`: Get server start command
+- `websearch`: Extract content from URLs
+  - `url` (required): URL to fetch

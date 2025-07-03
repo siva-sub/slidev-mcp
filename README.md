@@ -2,9 +2,23 @@
 
 A Model Context Protocol (MCP) server that enables AI assistants to create professional Slidev presentations with advanced features like bulk slide generation, animations, themes, and interactive components.
 
-<a href="https://sli.dev/"><img src="https://img.shields.io/badge/Slidev-2.0-blue" alt="Slidev Version"></a>
-<a href="https://www.npmjs.com/package/slidev-mcp"><img src="https://img.shields.io/npm/v/slidev-mcp" alt="npm version"></a>
-<a href="https://github.com/siva-sub/slidev-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
+<div align="center">
+  <a href="https://github.com/siva-sub/slidev-mcp"><img src="https://img.shields.io/github/stars/siva-sub/slidev-mcp?style=social" alt="GitHub Stars"></a>
+  <a href="https://www.npmjs.com/package/slidev-mcp"><img src="https://img.shields.io/npm/v/slidev-mcp?color=red" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/slidev-mcp"><img src="https://img.shields.io/npm/dm/slidev-mcp" alt="npm downloads"></a>
+  <a href="https://sli.dev/"><img src="https://img.shields.io/badge/Slidev-2.0-blue" alt="Slidev Version"></a>
+  <a href="https://github.com/siva-sub/slidev-mcp/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
+</div>
+
+<div align="center">
+  <p>
+    <a href="https://github.com/siva-sub/slidev-mcp">GitHub</a> •
+    <a href="https://www.npmjs.com/package/slidev-mcp">npm</a> •
+    <a href="https://sli.dev/">Slidev Docs</a> •
+    <a href="#quick-start">Quick Start</a> •
+    <a href="#features">Features</a>
+  </p>
+</div>
 
 ## Features
 
@@ -20,31 +34,30 @@ A Model Context Protocol (MCP) server that enables AI assistants to create profe
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm or yarn
+- Node.js 18 or higher
+- npm, yarn, or pnpm
+- Claude Desktop app
 
-### Quick Start
+### Install
 
-#### Install via npm
-```bash
-npm install -g slidev-mcp
-```
+#### Recommended: Using npm/npx
 
-#### Configure Claude Desktop
-
-Add to your `claude_desktop_config.json`:
+In Claude Desktop, go to Settings > Developer > Edit Config (JSON) and add:
 
 ```json
 {
   "mcpServers": {
     "slidev-mcp": {
-      "command": "slidev-mcp"
+      "command": "npx",
+      "args": ["-y", "slidev-mcp"]
     }
   }
 }
 ```
 
-Or use npx:
+This method ensures you always use the latest version without manual updates.
+
+#### Alternative: Direct npx execution
 
 ```json
 {
@@ -56,6 +69,109 @@ Or use npx:
   }
 }
 ```
+
+#### Using with other MCP Clients
+
+**Cline:**
+```json
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "npx",
+      "args": ["-y", "slidev-mcp"]
+    }
+  }
+}
+```
+
+**Zed:**
+```json
+{
+  "language_models": {
+    "anthropic": {
+      "api_key": "your_key",
+      "mcp_servers": {
+        "slidev-mcp": {
+          "command": "npx",
+          "args": ["-y", "slidev-mcp"]
+        }
+      }
+    }
+  }
+}
+```
+
+### Alternative Installation Methods
+
+#### Global Installation
+
+Install globally with npm:
+
+```bash
+npm install -g slidev-mcp
+```
+
+Then add to your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "slidev-mcp"
+    }
+  }
+}
+```
+
+#### Local Installation
+
+For development or testing:
+
+```bash
+# Clone the repository
+git clone https://github.com/siva-sub/slidev-mcp.git
+cd slidev-mcp
+
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Add to MCP config with full path
+{
+  "mcpServers": {
+    "slidev-mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/slidev-mcp/dist/index.js"]
+    }
+  }
+}
+```
+
+## Quick Start
+
+After installation, restart Claude Desktop and you can start using Slidev MCP:
+
+1. **Create your first presentation:**
+   ```
+   "Create a presentation about JavaScript async/await"
+   ```
+
+2. **Generate a complete deck:**
+   ```
+   "Create a 10-slide presentation on React hooks with animations and code examples"
+   ```
+
+3. **Apply a theme:**
+   ```
+   "Apply the corporate theme to my presentation"
+   ```
+
+4. **Add components:**
+   ```
+   "Add a YouTube video about TypeScript to slide 3"
+   ```
 
 ## Usage
 
@@ -216,20 +332,42 @@ Configure Claude Desktop with local path:
 
 ## Troubleshooting
 
-### Common Issues
+### Installation Issues
 
-1. **Slidev not found**
+1. **"command not found" error**
+   - Ensure you're using `npx` in the command field
+   - Or install globally: `npm install -g slidev-mcp`
+
+2. **"Cannot find module" error**
+   - Clear npm cache: `npm cache clean --force`
+   - Reinstall: `npm install -g slidev-mcp`
+
+3. **Permission denied**
+   - Use sudo for global install: `sudo npm install -g slidev-mcp`
+   - Or use npx to avoid global installation
+
+### Runtime Issues
+
+1. **Slidev CLI not found**
    ```bash
    npm install -g @slidev/cli
    ```
 
 2. **Node version error**
-   - Ensure Node.js 18+ is installed
+   - Check version: `node --version`
+   - Must be Node.js 18 or higher
+   - Update Node.js if needed
 
-3. **Permission issues**
-   ```bash
-   sudo npm install -g slidev-mcp
-   ```
+3. **MCP connection failed**
+   - Restart Claude Desktop after config changes
+   - Check the logs in Claude Desktop developer console
+   - Verify JSON syntax in config file
+
+### Getting Help
+
+- Report issues: https://github.com/siva-sub/slidev-mcp/issues
+- View examples: Check the `/examples` directory
+- Slidev docs: https://sli.dev
 
 ## Contributing
 
